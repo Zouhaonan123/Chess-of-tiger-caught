@@ -1,0 +1,289 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package javabhq;
+
+
+import java.awt.Color;
+
+import java.awt.Graphics;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+/**
+ *
+ * @author 邹浩南
+ */
+
+public class TES extends MouseAdapter{
+    
+    /**
+     * @param args the command line arguments
+     */
+    public static Node [][] node;
+    
+    public static void main(String[] args) {
+        // TODO code application logic here
+        new TES().Init();
+        JFrame f = new JFrame("捕虎棋");
+        GamePanel  gp = new GamePanel(node);//为cdPanel创建实例对象
+        
+        f.add(gp);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        //  棋盘宽 850， 高 800
+        f.setSize(850, 800);
+        f.setVisible(true);   
+    }
+    
+   
+    public void Init(){
+        //Node [][] node;
+        int i, j;
+        node = new Node [ 8 ][ ];          //动态创建第一维  
+        for ( i = 0 ; i < 8 ; i++ ) {  
+            node[ i ] = new Node [ 7 ];    //动态创建第二维  
+            for( j = 0 ; j < 7 ; j++) { 
+                node[ i ][ j ] = new Node(); 
+           
+                //node[ i ][ j ].flag = 0;   
+            }  
+        }
+        
+        // flag=9：无棋盘
+        // flag=1: 犬
+        // flag=2：虎
+        // flag=0: 无棋子
+        for(j = 0; j < 7; j++){              
+            if(j != 3)//给第一行赋初值
+                node[0][j].flag = 9;    //无按钮位置  
+
+            if(j == 0 || j == 1 || j == 5 || j == 6)         //给第二行赋值
+                node[1][j].flag = 9;    //无按钮位置
+            
+            if(j == 0 || j == 6){
+                node[2][j].flag = 9;     
+                node[6][j].flag = 9; //第三行全是犬
+            }
+            else{
+                node[2][j].flag = 1;  
+                node[6][j].flag = 1; 
+            }
+           //第四行赋值
+            
+            
+            
+            node[7][j].flag = 9;
+        }
+        node[3][0].flag = 9;
+        node[3][6].flag = 9;
+           
+        node[3][1].flag = 1;
+        node[3][5].flag = 1;
+            
+        node[4][0].flag = 9;          //第五行首位犬
+        node[4][1].flag = 1;          
+        node[4][3].flag = 2;
+        node[4][5].flag = 1;
+        node[4][6].flag = 9;
+            
+        node[5][0].flag = 9;
+        node[5][6].flag = 9;
+           
+        node[5][1].flag = 1;
+        node[5][5].flag = 1;
+        for(i = 0; i < 8; i++){
+            for(j = 0; j < 7; j++){
+                System.out.print(node[i][j].flag+" ");
+            }
+            System.out.println();
+        }
+    }
+    // 输出 棋盘 数组
+    public static void Output() {
+        for(int i = 0; i < 8; i++){
+            for(int j = 0; j < 7; j++){
+                System.out.print(node[i][j].flag+" ");
+            }
+            System.out.println();
+        }
+    }
+    public static void Click(Node [][] node, int x, int y){
+        int f = 0, i = 0, j = 0;
+        for(i = 0; i < 8; i++){
+            for(j = 0; j < 7; j++){
+                if( node[i][j].ifClicked == 1 ) {//寻找二维数组中有没有被选取过的点
+                    f = 1;
+                    break;//有
+                }  
+            }
+            // 如果检测到被选中的点
+            if(j != 7 && i != 8) {
+                break;
+            }
+        }
+        System.out.println("1 Click Click Click Click " + " x: "+x + " y: "+y);
+        // 是否选中某棋子
+        if( f == 0 ){      //点击表示选取该结点
+            if( node[x][y].flag == 1 || node[x][y].flag == 2 )//对有棋子在上面的结点进行处理
+                node[x][y].ifClicked = 1;
+                System.out.println("2 Click Click Click Click ");
+        } 
+        else{      //点击表示移动到该位置
+            
+            //限制走棋距离不超一格
+            if(Math.abs(x-i)>1 || Math.abs(y-j)>1) {
+                System.out.println("3 Click Click Click Click x: "+Math.abs(x-i)+"y: "+Math.abs(y-j));
+                return;
+            }
+            //无线的两点之间不能走
+            if((i == 2 && j == 2) || (i == 2 && j == 4) || (i == 3 && j == 1) || (i == 3 && j == 3) || (i == 3 && j == 5) || (i == 4 && j == 2) || (i == 4 && j == 4) || (i == 5 && j == 1) || (i == 5 && j == 3) || (i == 5 && j == 5) || (i == 6 && j == 2) || (i == 6 && j == 4)) {
+                if(Math.abs(x-i) == 1 && Math.abs(y-j) == 1) {
+                    System.out.println("4 Click Click Click Click x: "+Math.abs(x-i)+"y: "+Math.abs(y-j));
+                    return;
+                }
+            }
+            if( node[x][y].flag == 0 ){     //只对空结点处理
+                node[x][y].flag = node[i][j].flag;
+                node[i][j].flag = 0;   //将原先被选中的结点标记为无棋子状态
+                node[i][j].ifClicked = 0;   //将原先选中的结点标记去掉
+                
+                if( node[x][y].flag == 2 ){   //如果移动的是虎，执行吃犬操作
+                    //System.out.println("3 Click Click Click Click: i: "+((node[x-1][y-1].flag == node[x+1][y+1].flag) && (node[x+1][y+1].flag == 1))+" j: "+(node[x+1][y+1].flag == 1));
+                    /*(node[x-1][y-1].flag == 1 && (node[x+1][y+1].flag == 1)*/
+                    if( node[x-1][y-1].flag == 1 && node[x+1][y+1].flag == 1 ){
+                        //System.out.println("4 Click Click Click Click: i: "+i+" j: "+j);
+                        node[x-1][y-1].flag = 0;
+                        node[x+1][y+1].flag = 0;
+                        
+                    }
+                    else if(node[x-1][y].flag == 1 && node[x+1][y].flag == 1 ){
+                        node[x-1][y].flag = 0;
+                        node[x+1][y].flag = 0;
+                        //System.out.println("5 Click Click Click Click: i: "+i+" j: "+j);
+                    }
+                    else if(node[x-1][y+1].flag == 1 && node[x+1][y-1].flag == 1 ){
+                        node[x-1][y+1].flag = 0;
+                        node[x+1][y-1].flag = 0;
+                       // System.out.println("6 Click Click Click Click: i: "+i+" j: "+j);
+                    }
+                    else if(node[x][y-1].flag == 1 && node[x][y+1].flag == 1 ){
+                        node[x][y-1].flag = 0;
+                        node[x][y+1].flag = 0;
+                       // System.out.println("7 Click Click Click Click: i: "+i+" j: "+j);
+                    }
+                }
+      
+            }
+            
+            int tigerCount = 0, dogCount = 0;
+            for(i = 0; i < 8; i++){
+                for(j = 0; j < 7; j++){
+                    if( node[i][j].flag == 1 )//计算狗的数量
+                        dogCount++;
+                    if( node[i][j].flag == 2 )
+                        tigerCount++;
+                }
+            }
+            if( tigerCount == 1 && dogCount == 2 ){
+                //虎赢
+                System.out.println("虎赢");
+            }
+            
+           
+            else {
+                //犬赢
+                // 虎到陷阱
+                if((node[1][2].flag == 2) || node[1][4].flag==2 || node[1][3].flag==2) {
+                    System.out.println("犬赢");
+                }
+                // 虎到角落
+                else if( tigerCount==1 && dogCount>=4 && (( node[2][0].flag == 2 && node[2][1].flag == 1 &&  node[3][0].flag == 1 &&  node[3][1].flag == 1) ||( node[2][4].flag == 2 && node[2][3].flag == 1 &&  node[3][3].flag == 1 &&  node[3][4].flag == 1)||( node[6][0].flag == 2 && node[5][0].flag == 1 && node[5][1].flag == 1 && node[6][1].flag == 1)||( node[6][4].flag == 2 && node[6][3].flag == 1 &&  node[5][3].flag == 1 &&  node[5][4].flag == 1))){
+                    System.out.println("犬赢");
+                } 
+            }
+            
+        }
+    }
+}
+class Node 
+{
+    int flag;
+    int ifClicked;
+}
+class GamePanel extends JPanel {
+    public static Node [][]node;
+    public GamePanel(Node [][]node){
+        this.node = node;
+        this.addMouseListener( new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                // 区域归于一点
+                int y = (e.getX()-70)/100;
+                int x = (e.getY()-20)/100;
+                System.out.println(" x: "+e.getY()+" y: "+e.getX());
+                TES.Click(node, x, y);
+                TES.Output();
+                repaint();
+            }
+        });
+    }
+    //重写Panel类的paint()方法
+    @Override
+    public void paint(Graphics g) {
+        // 调用函数 画 棋盘
+        super.paint(g);
+        PaintArray(g);
+        // 画棋子
+        for(int i=0; i<8; i++) {
+            for(int j=0; j<7; j++) {
+                if(node[i][j].flag==1) {
+                    // 画 犬
+                    g.drawOval(100*j+85, 100*i+35, 30, 30);
+                } else if(node[i][j].flag==2) {
+                    //画 虎
+                    g.drawOval(100*j+70, 100*i+20, 60, 60);
+                } 
+            }
+        }
+        
+    }
+    
+    // 画 棋盘
+    public void PaintArray(Graphics g) {
+        // 绘制 横线
+        for(int i=0; i<=6; i++) {
+            if(i<2)
+                continue;
+            g.setColor(Color.red);
+            g.drawLine(200, 50+100*i, 600, 50+100*i);
+        }
+        // 绘制 竖线
+        for(int i=0; i<5; i++) {
+            g.setColor(Color.red);
+            g.drawLine(100*i+200, 250, 100*i+200, 650);
+        }
+        // 绘制 棱形, 顶点（400, 50）
+        g.drawLine(400, 50, 400, 250);
+        g.drawLine(300, 150, 500, 150);
+        g.drawLine(400, 50, 500, 150);
+        g.drawLine(400, 50, 300, 150);
+        g.drawLine(500, 150, 400, 250);
+        g.drawLine(300, 150, 400, 250);
+        
+        // 绘制斜线 左边上顶点(200, 250) 下(100, 650) 右(600, )
+        int i=200, j=0;
+        g.drawLine(200, 250, 600, 650);
+        g.drawLine(200+i, 250, 600, 650-i);
+        g.drawLine(200, 250+i, 600-i, 650);
+        // 从左下到右上
+        g.drawLine(200, 650, 600, 250);
+        g.drawLine(200, 650-i, 600-i, 250);
+        g.drawLine(200+i, 650, 600, 250+i);
+    }
+
+}
